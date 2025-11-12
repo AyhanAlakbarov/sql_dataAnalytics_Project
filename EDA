@@ -1,0 +1,91 @@
+/*database exploration*/
+SELECT * FROM INFORMATION_SCHEMA.TABLES
+SELECT TABLE_NAME,COLUMN_NAME,DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+SELECT * FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME='dim_customers'
+
+/*dimension exploration*/
+SELECT DISTINCT country FROM gold.dim_customers
+SELECT DISTINCT category FROM gold.dim_products
+SELECT DISTINCT subcategory FROM gold.dim_products
+SELECT DISTINCT product_line FROM gold.dim_products
+SELECT * FROM gold.fact_sales
+/*Data Exploration*/
+SELECT 
+MIN(birthdate) as oldestbirthdate,
+MAX(birthdate) as youghestbirthdate,
+DATEDIFF(year,MIN(birthdate),GETDATE()) as oldestcustomer,
+DATEDIFF(year,MAX(birthdate),GETDATE()) as youngestcustomer
+FROM gold.dim_customers
+SELECT 
+MIN(order_date) as firstorder,
+MAX(order_date) as lastorder,
+DATEDIFF(year,MIN(order_date),MAX(order_date)) as period
+FROM gold.fact_sales
+
+/*Measure Exploration*/
+SELECT * FROM gold.fact_sales
+SELECT SUM(sales_amount) as total_sales FROM gold.fact_sales 
+SELECT AVG(price) as average_price FROM gold.fact_sales 
+SELECT AVG(price) as average_price FROM gold.fact_sales 
+ 
+SELECT COUNT(DISTINCT product_key) as total_products FROM gold.dim_products
+SELECT COUNT(DISTINCT customer_id) as total_customers FROM gold.dim_customers
+
+SELECT 'Total Sales'as measure_name, SUM(sales_amount) as measure_value FROM gold.fact_sales 
+UNION ALL
+SELECT 'Average price'as measure_name, AVG(price) asmeasure_value FROM gold.fact_sales 
+UNION ALL
+SELECT 'Total Products'as measure_name, COUNT(DISTINCT product_key) asmeasure_value FROM gold.dim_products
+UNION ALL
+SELECT 'Total Customers'as measure_name, COUNT(DISTINCT customer_id) as measure_value FROM gold.dim_customers
+
+/*Magnitude Exploration*/
+SELECT country,	COUNT(customer_key) as total_customer FROM gold.dim_customers
+GROUP BY country
+SELECT category, COUNT(product_id) as total_customer FROM gold.dim_products
+GROUP BY category
+SELECT gender,	COUNT(customer_key) as total_customer FROM gold.dim_customers
+GROUP BY gender
+ORDER BY total_customer desc
+SELECT category, AVG(product_id) as avg_customer FROM gold.dim_products
+GROUP BY category
+
+SELECT 
+pr.category,
+
+SUM(sl.sales_amount) as total_sales
+ FROM gold.dim_products as pr
+INNER JOIN gold.fact_sales as sl
+ON pr.product_key=sl.product_key
+GROUP BY pr.category
+SELECT * FROM gold.fact_sales
+SELECT 
+cu.customer_id,
+
+SUM(sl.sales_amount) as total_sales
+ FROM gold.dim_customers as cu
+INNER JOIN gold.fact_sales as sl
+ON cu.customer_id=sl.customer_key
+GROUP BY cu.customer_id
+SELECT * FROM gold.dim_customers
+
+/*Ranking Analysis*/
+SELECT TOP 5
+product_name,
+SUM(sa.sales_amount) as total_sales
+FROM gold.dim_products as pr
+INNER JOIN gold.fact_sales as sa
+ON pr.product_key=sa.product_key
+GROUP BY product_name
+ORDER BY total_sales DESC
+
+SELECT TOP 5
+product_name,
+SUM(sa.sales_amount) as total_sales
+FROM gold.dim_products as pr
+INNER JOIN gold.fact_sales as sa
+ON pr.product_key=sa.product_key
+GROUP BY product_name
+ORDER BY total_sales ASC
+
